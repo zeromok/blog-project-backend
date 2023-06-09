@@ -51,8 +51,10 @@ class BolgApiControllerTest {
     @Order(1)
     @DisplayName("addArticle: 블로그 글 추가에 성공한다.")
     void addArticle() throws Exception {
-        // * given
 
+        /**
+         * Given : 블로그 글 추가에 필요한 요청객체 만들기
+         * */
         // 기본 설정 값들
         final String url = "/api/articles";
         final String title = "title";
@@ -62,15 +64,23 @@ class BolgApiControllerTest {
         final AddArticleRequest userRequest = new AddArticleRequest(title, content);
         final String requestBody = objectMapper.writeValueAsString(userRequest);
 
-        // * when
-        // request 전송 후 ResultActions 타입 반환
+        /**
+         * When : 블로그 글 추가 API에 요청을 보낸다.
+         *        이때 요청 타입은 JSON 이며, given 절에서 미리 만들어둔 객체를 요청 본문으로 함께 보낸다.
+         * @return ResultActions
+         * */
         ResultActions result = mockMvc.perform(post(url).contentType(MediaType.APPLICATION_JSON_VALUE).content(requestBody));
 
-        // * then
+        /**
+         * Then : 응답 코드가 201인지 확인
+         *        전체 조회 후 크기가 1인지 확인
+         *        실제로 저장된 데이터와 요청 값 비교
+         * */
         result.andExpect(status().isCreated());
 
         List<Article> articles = blogRepository.findAll();
         assertThat(articles).hasSize(1);
+
         assertThat(articles.get(0).getTitle()).isEqualTo(title);
         assertThat(articles.get(0).getContent()).isEqualTo(content);
     }
@@ -80,8 +90,10 @@ class BolgApiControllerTest {
     @Order(2)
     @DisplayName("addArticle: 블로그 글 목록 조회에 성공한다.")
     void findAllArticle() throws Exception {
-        // * given
 
+        /**
+         * Given : 블로그 글을 저장합니다.
+         * */
         // 기본 설정 값들
         final String url = "/api/articles";
         final String title = "title";
@@ -90,11 +102,16 @@ class BolgApiControllerTest {
         // 값 설정
         blogRepository.save(Article.builder().title("title").content("content").build());
 
-        // * when
-        // request 전송 후 ResultActions 타입 반환
+        /**
+         * When : 목록 조회 API 를 호출합니다.
+         * @return ResultActions
+         * */
         ResultActions result = mockMvc.perform(get(url).accept(MediaType.APPLICATION_JSON));
 
-        // * then
+        /**
+         * Then : 응답코드가 OK 인지 확인
+         *        반환받은 값(JSON)중에 0번째 요소의 값들 저장된 값과 비교합니다.
+         * */
         result.andExpect(status().isOk())
                 .andExpect(jsonPath("$[0].title").value(title))
                 .andExpect(jsonPath("$[0].content").value(content));
