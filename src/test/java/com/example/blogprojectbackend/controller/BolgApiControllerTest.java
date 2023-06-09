@@ -21,6 +21,7 @@ import java.util.List;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
+import static org.springframework.test.web.servlet.result.MockMvcResultHandlers.print;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
@@ -116,5 +117,37 @@ class BolgApiControllerTest {
                 .andExpect(jsonPath("$[0].title").value(title))
                 .andExpect(jsonPath("$[0].content").value(content));
     }
+
+    @Test
+    @Order(3)
+    @DisplayName("findArticle: 아이디를 통해 블로그 글 조회에 성공한다.")
+    void findArticle() throws Exception {
+
+        /**
+         * Given: 블로그 글을 저장합니다.
+         * */
+        final String url = "/api/articles";
+        final String title = "title";
+        final String content = "content";
+
+        blogRepository.save(Article.builder().title("title").content("content").build());
+
+        /**
+         * When: 저장한 블로그 글의 id 값으로 API 를 호출
+         * */
+        final ResultActions resultActions = mockMvc.perform(get(url, 1));
+
+        /**
+         * Then: 응답코드가 OK 인지 확인
+         *       반환받은 값들이 저장된 아이디의 매핑되는 값인지 확인합니다.
+         * */
+        resultActions
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$[0].title").value(title))
+                .andExpect(jsonPath("$[0].content").value(content))
+                .andDo(print());
+//                .andReturn().getResponse().getContentAsString();
+    }
+
 
 } // end
