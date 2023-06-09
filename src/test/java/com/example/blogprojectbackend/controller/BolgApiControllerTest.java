@@ -4,10 +4,7 @@ import com.example.blogprojectbackend.domain.Article;
 import com.example.blogprojectbackend.dto.AddArticleRequest;
 import com.example.blogprojectbackend.repository.BlogRepository;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import org.junit.jupiter.api.BeforeAll;
-import org.junit.jupiter.api.DisplayName;
-import org.junit.jupiter.api.Test;
-import org.junit.jupiter.api.TestInstance;
+import org.junit.jupiter.api.*;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.context.SpringBootTest;
@@ -25,7 +22,6 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 
 @SpringBootTest
 @AutoConfigureMockMvc
-@TestInstance(TestInstance.Lifecycle.PER_CLASS)
 class BolgApiControllerTest {
 
     @Autowired
@@ -40,8 +36,8 @@ class BolgApiControllerTest {
     @Autowired
     BlogRepository blogRepository;
 
-    @BeforeAll
-    void beforeAll() {
+    @BeforeEach
+    void beforeEach() {
         this.mockMvc = MockMvcBuilders.webAppContextSetup(context).build();
 
         blogRepository.deleteAll();
