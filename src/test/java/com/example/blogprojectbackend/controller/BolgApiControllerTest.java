@@ -2,6 +2,7 @@ package com.example.blogprojectbackend.controller;
 
 import com.example.blogprojectbackend.domain.Article;
 import com.example.blogprojectbackend.dto.AddArticleRequest;
+import com.example.blogprojectbackend.dto.UpdateArticleRequest;
 import com.example.blogprojectbackend.repository.BlogRepository;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.junit.jupiter.api.BeforeEach;
@@ -17,6 +18,7 @@ import org.springframework.test.web.servlet.ResultActions;
 import org.springframework.test.web.servlet.setup.MockMvcBuilders;
 import org.springframework.web.context.WebApplicationContext;
 
+import java.nio.charset.StandardCharsets;
 import java.util.List;
 
 import static org.assertj.core.api.Assertions.assertThat;
@@ -151,13 +153,12 @@ class BolgApiControllerTest {
 
     @Test
     @Order(4)
-    @DisplayName("delete: Article: 아이디를 통해 블로그 글 삭제에 성공한다.")
+    @DisplayName("deleteArticle: 아이디를 통해 블로그 글 삭제에 성공한다.")
     void deleteArticle() throws Exception {
 
         final String url = "/api/articles/{id}";
         final String title = "title";
         final String content = "content";
-
 
         /**
          * Given: 블로그 글을 저장합니다.
@@ -178,6 +179,48 @@ class BolgApiControllerTest {
         List<Article> articles = blogRepository.findAll();
 
         assertThat(articles).isEmpty();
+    }
+
+    @Test
+    @Order(5)
+    @DisplayName("updateArticle: 블로그 글 수정에 성공한다.")
+    void updateArticle() throws Exception {
+        final String url = "/api/articles/{id}";
+        final String title = "title";
+        final String content = "content";
+
+        final String newTitle = "newTitle";
+        final String newContent = "newContent";
+
+        /**
+         * Given: 블로그 글을 저장하고, 수정에 필요한 요청객체 만듦
+         * */
+        Article saveArticle = blogRepository.save(Article.builder().title("title").content("content").build());
+        UpdateArticleRequest request = new UpdateArticleRequest(newTitle, newContent);
+
+        /**
+         * When:
+         *       응답코드가 OK 인지 확인
+         * */
+         ResultActions resultActions = mockMvc.perform(put(url, saveArticle.getId())
+                 .contentType(MediaType.APPLICATION_JSON_VALUE)
+                 .content(objectMapper.writeValueAsString(request))
+                 .characterEncoding(StandardCharsets.UTF_8));
+
+
+        /**
+         * Then: 응답 상태가 200Ok 이인지 확인
+         *       수정된 데이터를 받아와 수정될 값과 비교
+         * */
+        resultActions
+                .andExpect(status().isOk())
+                .andDo(print());
+
+        Article article = blogRepository.findById(saveArticle.getId()).get();
+
+        assertThat(article.getTitle()).isEqualTo(newTitle);
+        assertThat(article.getContent()).isEqualTo(newContent);
+
     }
 
 
