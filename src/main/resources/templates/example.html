@@ -20,8 +20,8 @@
             <li th:text="${hobby}"></li>
             <span th:if="${hobby == '등산'}">(대표취미)</span>
         </ul>
-    </div>
 
-    <a href="@{/api/articles/{id}}(id = ${person.id})">글 보기</a>
+        <a th:href="@{/api/articles/{id}(id = ${person.id})}">글 보기</a>
+    </div>
 </body>
 </html>
