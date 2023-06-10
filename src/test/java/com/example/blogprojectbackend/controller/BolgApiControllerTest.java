@@ -4,23 +4,23 @@ import com.example.blogprojectbackend.domain.Article;
 import com.example.blogprojectbackend.dto.AddArticleRequest;
 import com.example.blogprojectbackend.repository.BlogRepository;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import org.junit.jupiter.api.*;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.DisplayName;
+import org.junit.jupiter.api.Order;
+import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.context.SpringBootTest;
-import org.springframework.data.web.JsonPath;
 import org.springframework.http.MediaType;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.ResultActions;
 import org.springframework.test.web.servlet.setup.MockMvcBuilders;
 import org.springframework.web.context.WebApplicationContext;
 
-import java.sql.SQLOutput;
 import java.util.List;
 
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
 import static org.springframework.test.web.servlet.result.MockMvcResultHandlers.print;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
@@ -126,16 +126,16 @@ class BolgApiControllerTest {
         /**
          * Given: 블로그 글을 저장합니다.
          * */
-        final String url = "/api/articles";
+        final String url = "/api/articles/{id}";
         final String title = "title";
         final String content = "content";
 
-        blogRepository.save(Article.builder().title("title").content("content").build());
+        Article saveArticle = blogRepository.save(Article.builder().title("title").content("content").build());
 
         /**
          * When: 저장한 블로그 글의 id 값으로 API 를 호출
          * */
-        final ResultActions resultActions = mockMvc.perform(get(url, 1));
+        final ResultActions resultActions = mockMvc.perform(get(url, saveArticle.getId()));
 
         /**
          * Then: 응답코드가 OK 인지 확인
@@ -143,10 +143,41 @@ class BolgApiControllerTest {
          * */
         resultActions
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$[0].title").value(title))
-                .andExpect(jsonPath("$[0].content").value(content))
+                .andExpect(jsonPath("$.title").value(title))
+                .andExpect(jsonPath("$.content").value(content))
                 .andDo(print());
 //                .andReturn().getResponse().getContentAsString();
+    }
+
+    @Test
+    @Order(4)
+    @DisplayName("delete: Article: 아이디를 통해 블로그 글 삭제에 성공한다.")
+    void deleteArticle() throws Exception {
+
+        final String url = "/api/articles/{id}";
+        final String title = "title";
+        final String content = "content";
+
+
+        /**
+         * Given: 블로그 글을 저장합니다.
+         * */
+        Article saveArticle = blogRepository.save(Article.builder().title("title").content("content").build());
+
+        /**
+         * When: 저장한 블로그 글의 id 값으로 삭제 API 를 호출
+         *       응답코드가 OK 인지 확인
+         * */
+        mockMvc.perform(delete(url, saveArticle.getId()))
+                .andExpect(status().isOk())
+                .andDo(print());
+
+        /**
+         * Then: 블로그 글 리스트를 조회해 크기가 0인지 확인
+         * */
+        List<Article> articles = blogRepository.findAll();
+
+        assertThat(articles).isEmpty();
     }
 
 
