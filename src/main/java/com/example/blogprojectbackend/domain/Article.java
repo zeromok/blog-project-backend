@@ -2,8 +2,16 @@ package com.example.blogprojectbackend.domain;
 
 import jakarta.persistence.*;
 import lombok.Builder;
+import lombok.Getter;
+import lombok.NoArgsConstructor;
+import org.springframework.data.annotation.CreatedDate;
+import org.springframework.data.annotation.LastModifiedDate;
+
+import java.time.LocalDateTime;
 
 @Entity
+@NoArgsConstructor
+@Getter
 public class Article {
 
     @Id
@@ -17,7 +25,13 @@ public class Article {
     @Column(name = "content", nullable = false)
     private String content;
 
-    public Article() {;;}
+    @CreatedDate
+    @Column(name = "created_at")
+    private LocalDateTime createdAt;
+
+    @LastModifiedDate
+    @Column(name = "updated_at")
+    private LocalDateTime updateAt;
 
     @Builder
     public Article(String title, String content) {
@@ -25,17 +39,6 @@ public class Article {
         this.content = content;
     }
 
-    public Long getId() {
-        return id;
-    }
-
-    public String getTitle() {
-        return title;
-    }
-
-    public String getContent() {
-        return content;
-    }
 
     public void update(String title, String content) {
         this.title = title;
