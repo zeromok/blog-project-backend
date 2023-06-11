@@ -5,6 +5,7 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.security.authentication.AuthenticationManager;
+import org.springframework.security.authentication.dao.DaoAuthenticationProvider;
 import org.springframework.security.config.annotation.authentication.builders.AuthenticationManagerBuilder;
 import org.springframework.security.config.annotation.authentication.configuration.AuthenticationConfiguration;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
@@ -19,7 +20,7 @@ import static org.springframework.boot.autoconfigure.security.servlet.PathReques
 @RequiredArgsConstructor
 public class WebSecurityConfig {
 
-    private UserDetailService userDetailService;
+    private final UserDetailService userService;
 
     @Bean
     public WebSecurityCustomizer configure() { // 시큐리티 설정 사용자 정의화
@@ -35,13 +36,13 @@ public class WebSecurityConfig {
                 .csrf(AbstractHttpConfigurer::disable)
                 .authorizeHttpRequests(request -> {
                     request
-                            .requestMatchers(toH2Console()).permitAll()
-                            .requestMatchers("/login", "/signup", "/user").permitAll();
+                            .requestMatchers("/login", "/signup", "/user").permitAll()
+                            .anyRequest().authenticated();
                 })
                 .formLogin(login -> {
                     login
                             .loginPage("/login")
-                            .defaultSuccessUrl("/article");
+                            .defaultSuccessUrl("/articles");
                 })
                 .logout(logout -> {
                     logout
@@ -54,8 +55,12 @@ public class WebSecurityConfig {
     }
 
     @Bean
-    public AuthenticationManager authenticationManager(AuthenticationConfiguration authenticationConfiguration) throws Exception {
-        return authenticationConfiguration.getAuthenticationManager();
+    public AuthenticationManager authenticationManager(HttpSecurity http, BCryptPasswordEncoder bCryptPasswordEncoder, UserDetailService userDetailService) throws Exception {
+        return http.getSharedObject(AuthenticationManagerBuilder.class)
+                .userDetailsService(userService)
+                .passwordEncoder(bCryptPasswordEncoder)
+                .and()
+                .build();
     }
 
     @Bean
