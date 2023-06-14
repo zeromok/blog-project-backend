@@ -1,5 +1,7 @@
 
 spring:
+  profiles:
+    include: oauth
   jpa:
     show-sql: true
     defer-datasource-initialization: true
@@ -11,6 +13,16 @@ spring:
   h2:
     console:
       enabled: true
+  security:
+    oauth2:
+      client:
+        registration:
+          google:
+            client-id: 1068448426837-ofkas6cs36ikoreipbgpvoq218pia0d3.apps.googleusercontent.com
+            client-secret: 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
+            scope:
+              - email
+              - profile
 
 jwt:
   issuer: test@gmail.com
