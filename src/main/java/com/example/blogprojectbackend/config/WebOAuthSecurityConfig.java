@@ -9,13 +9,16 @@ import com.example.blogprojectbackend.service.UserService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.http.HttpStatus;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.WebSecurityCustomizer;
 import org.springframework.security.config.annotation.web.configurers.AbstractHttpConfigurer;
 import org.springframework.security.config.http.SessionCreationPolicy;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.web.SecurityFilterChain;
+import org.springframework.security.web.authentication.HttpStatusEntryPoint;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
+import org.springframework.security.web.util.matcher.AntPathRequestMatcher;
 
 import static org.springframework.boot.autoconfigure.security.servlet.PathRequest.toH2Console;
 
@@ -38,24 +41,29 @@ public class WebOAuthSecurityConfig {
     @Bean
     public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
         http
-                .csrf(AbstractHttpConfigurer::disable)
-                .httpBasic(AbstractHttpConfigurer::disable)
-                .formLogin(AbstractHttpConfigurer::disable)
+                .csrf(AbstractHttpConfigurer::disable) //csrf 보호구성 off
+                .httpBasic(AbstractHttpConfigurer::disable) // 기본인증 off
+                .formLogin(AbstractHttpConfigurer::disable) // 로그인 양식 off
                 .logout(AbstractHttpConfigurer::disable)
                 .sessionManagement(session -> session
-                        .sessionCreationPolicy(SessionCreationPolicy.STATELESS))
-                .addFilterBefore(tokenAuthenticationFilter(), UsernamePasswordAuthenticationFilter.class)
-                .authorizeHttpRequests(request -> request
+                        .sessionCreationPolicy(SessionCreationPolicy.STATELESS)) // 세션 정책 설정
+                .addFilterBefore(tokenAuthenticationFilter(), UsernamePasswordAuthenticationFilter.class) // 토큰을 확인할 커스텀 필터 추가
+                .authorizeHttpRequests(request -> request // 토큰 재발급 URL 은 인증 없이 접근 가능
                         .requestMatchers("/api/token").permitAll()
                         .requestMatchers("/api/**").authenticated()
                         .anyRequest().permitAll())
-                .oauth2Login(login -> login
+                .oauth2Login(login -> login // OAuth2 로그인 지원 구성
                         .loginPage("/login")
                         .authorizationEndpoint(endpoint -> endpoint.authorizationRequestRepository(oAuth2AuthorizationRequestBasedOnCookieRepository()))
                         .successHandler(oAuth2SuccessHandler())
                         .userInfoEndpoint(endpoint -> endpoint.userService(oAuth2UserCustomService))
                 )
-                .logout(logout -> logout.logoutSuccessUrl("/login"));
+                .logout(logout -> logout.logoutSuccessUrl("/login"))
+                .exceptionHandling(exception -> exception
+                        // /api 로 시작하는 url 인 경우 401 상태코드 반환
+                        .defaultAuthenticationEntryPointFor(new HttpStatusEntryPoint(HttpStatus.UNAUTHORIZED),
+                                new AntPathRequestMatcher("/api/**"))
+                );
 
         return http.build();
     }
