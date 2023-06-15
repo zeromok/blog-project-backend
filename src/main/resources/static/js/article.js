@@ -51,7 +51,7 @@ const createButton = document.getElementById('create-btn');
 if (createButton != null) {
     // 등록 버튼을 클릭하면 /api/articles로 요청을 보낸다
     createButton.addEventListener('click', event => {
-        body = JSON.stringify({
+        let body = JSON.stringify({
             title: document.getElementById('title').value,
             content: document.getElementById('content').value
         });
@@ -71,12 +71,12 @@ if (createButton != null) {
 
 // 쿠키를 가져오는 함수
 function getCookie(key) {
-    var result = null;
-    var cookie = document.cookie.split(';');
+    let result = null;
+    let cookie = document.cookie.split(';');
     cookie.some(function (item) {
         item = item.replace(' ', '');
 
-        var dic = item.split('=');
+        let dic = item.split('=');
 
         if (key === dic[0]) {
             result = dic[1];
@@ -89,7 +89,6 @@ function getCookie(key) {
 
 // HTTP 요청을 보내는 함수
 function httpRequest(method, url, body, success, fail) {
-    debugger
     fetch(url, {
         method: method,
         headers: { // 로컬 스토리지에서 액세스 토큰 값을 가져와 헤더에 추가
