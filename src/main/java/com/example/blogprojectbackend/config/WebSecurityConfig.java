@@ -46,23 +46,23 @@ public class WebSecurityConfig {
                             .logoutUrl("/logout")
                             .logoutSuccessUrl("/login")
                             .invalidateHttpSession(true); // 로그아웃 시 세션 무효
-                })
-                .authenticationProvider(daoAuthenticationProvider());
+                });
+                // .authenticationProvider(daoAuthenticationProvider());
 
 
         return httpSecurity.build();
     }
 
     // DaoAuthenticationProvider: UserDetailsService 및 PasswordEncoder 를 사용하여 사용자 아이디와 암호를 인증하는 AuthenticationProvider 구현체입니다.
-    @Bean
-    public DaoAuthenticationProvider daoAuthenticationProvider() throws Exception {
-        DaoAuthenticationProvider daoAuthenticationProvider = new DaoAuthenticationProvider();
-
-        daoAuthenticationProvider.setUserDetailsService(userService);
-        daoAuthenticationProvider.setPasswordEncoder(bCryptPasswordEncoder());
-
-        return daoAuthenticationProvider;
-    }
+    // @Bean
+    // public DaoAuthenticationProvider daoAuthenticationProvider() throws Exception {
+    //     DaoAuthenticationProvider daoAuthenticationProvider = new DaoAuthenticationProvider();
+    //
+    //     daoAuthenticationProvider.setUserDetailsService(userService);
+    //     daoAuthenticationProvider.setPasswordEncoder(bCryptPasswordEncoder());
+    //
+    //     return daoAuthenticationProvider;
+    // }
 
     @Bean
     public BCryptPasswordEncoder bCryptPasswordEncoder() { // 패스워드 인코더
