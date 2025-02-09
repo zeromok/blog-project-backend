@@ -4,7 +4,9 @@ import static org.springframework.boot.autoconfigure.security.servlet.PathReques
 
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.security.authentication.dao.DaoAuthenticationProvider;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
+import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
 import org.springframework.security.config.annotation.web.configuration.WebSecurityCustomizer;
 import org.springframework.security.config.annotation.web.configurers.AbstractHttpConfigurer;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
@@ -16,6 +18,7 @@ import lombok.RequiredArgsConstructor;
 
 @Configuration
 @RequiredArgsConstructor
+@EnableWebSecurity(debug = true)
 public class WebSecurityConfig {
 
     private final UserDetailService userService;
@@ -28,45 +31,48 @@ public class WebSecurityConfig {
                 .requestMatchers("/static/**"); // 정적메서드
     }
 
+
     @Bean
     public SecurityFilterChain filterChain(HttpSecurity httpSecurity) throws Exception { // HTTP 요청에 대한 시큐리티 설정
         httpSecurity
-                .csrf(AbstractHttpConfigurer::disable)
-                .authorizeHttpRequests(request -> {
-                    request
-                            .requestMatchers("/login", "/signup", "/user").permitAll()
-                            .anyRequest().authenticated();
-                })
-                .formLogin(login -> {
-                    login
-                            .loginPage("/login")
-                            .defaultSuccessUrl("/articles");
-                })
-                .logout(logout -> {
-                    logout
-                            .logoutUrl("/logout")
-                            .logoutSuccessUrl("/login")
-                            .invalidateHttpSession(true); // 로그아웃 시 세션 무효
-                });
-                // .authenticationProvider(daoAuthenticationProvider());
+            .csrf(AbstractHttpConfigurer::disable)
+            .authorizeHttpRequests(request -> {
+                request
+                    .requestMatchers("/login", "/signup", "/user").permitAll()
+                    .anyRequest().authenticated();
+            })
+            .formLogin(login -> {
+                login
+                    .loginPage("/login")
+                    .failureHandler(new CustomAuthenticationFailureHandler()) // 로그인 실패 시 핸들러 등록
+                    .defaultSuccessUrl("/articles");
+
+            })
+            .logout(logout -> {
+                logout
+                    .logoutUrl("/logout")
+                    .logoutSuccessUrl("/login")
+                    .invalidateHttpSession(true); // 로그아웃 시 세션 무효
+            })
+            .authenticationProvider(daoAuthenticProvider());
 
 
         return httpSecurity.build();
     }
 
-    // DaoAuthenticationProvider: UserDetailsService 및 PasswordEncoder 를 사용하여 사용자 아이디와 암호를 인증하는 AuthenticationProvider 구현체입니다.
-    // @Bean
-    // public DaoAuthenticationProvider daoAuthenticationProvider() throws Exception {
-    //     DaoAuthenticationProvider daoAuthenticationProvider = new DaoAuthenticationProvider();
-    //
-    //     daoAuthenticationProvider.setUserDetailsService(userService);
-    //     daoAuthenticationProvider.setPasswordEncoder(bCryptPasswordEncoder());
-    //
-    //     return daoAuthenticationProvider;
-    // }
+    @Bean
+    public DaoAuthenticationProvider daoAuthenticProvider() {
+        DaoAuthenticationProvider provider = new DaoAuthenticationProvider();
+
+        provider.setHideUserNotFoundExceptions(false);
+        provider.setPasswordEncoder(passwordEncoder());
+        provider.setUserDetailsService(userService);
+
+        return provider;
+    }
 
     @Bean
-    public BCryptPasswordEncoder bCryptPasswordEncoder() { // 패스워드 인코더
+    public BCryptPasswordEncoder passwordEncoder() { // 패스워드 인코더 등록
         return new BCryptPasswordEncoder();
     }
 
